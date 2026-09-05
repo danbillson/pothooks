@@ -10,7 +10,9 @@ permissions:
   contents: write
   pull-requests: write
   # Trusted publishing: npm mints a short-lived token from this, so there is no
-  # long-lived NPM_TOKEN in secrets and provenance comes for free.
+  # long-lived NPM_TOKEN in secrets. Provenance is attached automatically — do
+  # not set `provenance=true` in .npmrc for it, that only breaks publishing from
+  # anywhere without OIDC, such as the one manual publish that creates a package.
   id-token: write
 
 jobs:
