@@ -28,8 +28,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pothooks/pothooks-animate.git",
+    "url": "git+https://github.com/danbillson/pothooks.git",
     "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/danbillson/pothooks/issues"
   },
   "homepage": "https://pothooks.com",
   "keywords": [
