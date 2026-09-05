@@ -31,6 +31,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
 
+      # `publish` is `pnpm publish -r`, not `changeset publish`. Changesets 3.0.2
+      # probes the registry through `pnpm info` to decide what is unpublished,
+      # and in CI that comes back without a `versions` array — it then crashes on
+      # `publishedVersions.includes(...)`. `pnpm publish -r` makes the same
+      # decision itself, skips versions already on the registry, and is the only
+      # one of the two that rewrites `workspace:^` into a real range.
       - uses: changesets/action@v1
         with:
           version: pnpm run version-packages
