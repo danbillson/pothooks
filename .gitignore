@@ -3,3 +3,6 @@ dist
 .turbo
 *.tsbuildinfo
 .DS_Store
+
+# product spec — lives in the private app repo, not this one
+project.md

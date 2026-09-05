@@ -71,3 +71,8 @@ interface Playback {
 - **Mask ids are unique per instance.** Two pieces on one page with colliding
   ids would be the first bug this library shipped.
 - **No global CSS.** Everything is inline on the SVG.
+
+Using React? Reach for
+[`@pothooks/react`](https://github.com/danbillson/pothooks/tree/main/packages/react)
+instead — it wires all of the above up for you and renders correctly on a
+server.

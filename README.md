@@ -1,4 +1,4 @@
-# pothooks-animate
+# pothooks
 
 Replay handwriting on the web. Given a payload exported by
 [Pothooks](https://pothooks.com), draw the text as if a hand were writing it —
@@ -25,6 +25,8 @@ the bundle tiny and the render identical on a server and in a browser.
 ## Quick look
 
 ```bash
+git clone https://github.com/danbillson/pothooks.git
+cd pothooks
 pnpm install
 pnpm run build
 pnpm --filter @pothooks/playground dev
@@ -53,14 +55,14 @@ as the brush. Acceptable at speed.
 
 ## The payload
 
-`Payload` is the contract between the Pothooks app and this runtime, and is
-[defined independently in both repos](packages/core/src/types.ts) on purpose —
-a shared schema package would put a release cycle in front of every field.
+`Payload` is the contract between Pothooks and this runtime —
+[`types.ts`](packages/core/src/types.ts) has the full shape, and it is short.
+The `v` field is the version guard: the runtime refuses a payload it does not
+understand rather than rendering it wrong.
 
-`fixtures/signature.json` is what keeps them honest: a real exported payload,
-byte-identical in both repos. This repo renders it and asserts the SVG
-structure; Pothooks asserts its exporter reproduces the file. Drift shows up as
-a failing test rather than a support thread.
+[`fixtures/signature.json`](fixtures/signature.json) is a real exported payload.
+The test suite renders it and asserts the SVG structure, so it doubles as the
+reference for anyone generating payloads by hand.
 
 ## Repo
 
@@ -71,8 +73,21 @@ examples/playground  vite, not published
 fixtures             the shared payload fixture
 ```
 
-pnpm workspaces, Turborepo, Changesets, Vitest + happy-dom. Published from CI
-with npm trusted publishing (OIDC).
+pnpm workspaces, Turborepo, Changesets, Vitest + happy-dom.
+
+```bash
+pnpm run build      # tsdown, per package
+pnpm run test       # vitest + happy-dom
+pnpm run typecheck
+pnpm run lint       # oxlint
+```
+
+Releases go out from
+[`.github/workflows/release.yml`](.github/workflows/release.yml) on a merge to
+`main`: Changesets opens the version PR, and publishing uses npm trusted
+publishing (OIDC), so there is no long-lived token in secrets and provenance
+comes for free. Add a changeset with `pnpm changeset` in any PR that should
+ship.
 
 ## Licence
 

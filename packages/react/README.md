@@ -1,7 +1,8 @@
 # @pothooks/react
 
 React component for replaying handwriting recorded by
-[Pothooks](https://pothooks.com).
+[Pothooks](https://pothooks.com). Wraps
+[`@pothooks/core`](https://github.com/danbillson/pothooks/tree/main/packages/core).
 
 ```bash
 npm install @pothooks/react
@@ -46,7 +47,9 @@ const playback = useRef<Playback>(null);
 <button onClick={() => playback.current?.restart()}>Replay</button>
 ```
 
-The ref is a stable [`Playback`](../core#playsvg-opts-playback) facade — it
-keeps working when a prop change rebuilds the underlying loop.
+The ref is a stable [`Playback`][playback] facade — it keeps working when a
+prop change rebuilds the underlying loop.
+
+[playback]: https://github.com/danbillson/pothooks/tree/main/packages/core#playsvg-opts-playback
 
 `react` is a peer dependency (>=18).
