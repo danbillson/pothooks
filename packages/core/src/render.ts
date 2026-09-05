@@ -46,9 +46,41 @@ function assertPayload(payload: Payload): void {
   }
 }
 
+/**
+ * The area each mask is allowed to paint, stated rather than defaulted.
+ *
+ * A `<mask>` with no `x`/`y`/`width`/`height` takes the defaults
+ * `-10% -10% 120% 120%`, and under `maskUnits="userSpaceOnUse"` those
+ * percentages resolve against the *viewport*, not against the shape being
+ * masked. Ink sits at negative y — the baseline is zero and up is positive,
+ * flipped — so the default region starts a little above the origin and clips
+ * away everything higher than it. What survives is the few strokes nearest the
+ * baseline, which looks exactly like a mask that is too narrow and is nothing
+ * of the sort.
+ *
+ * Sized to the viewBox with a whole stroke of margin, so a round cap sitting on
+ * the edge is not shaved either.
+ */
+function maskRegion(payload: Payload): Record<string, string> {
+  const [x, y, w, h] = payload.viewBox.trim().split(/[\s,]+/).map(Number);
+  if (![x, y, w, h].every((n) => Number.isFinite(n))) return {};
+  const pad = Math.ceil(Math.max(0, ...payload.strokes.map((s) => s.w)));
+  // Extent is measured from the rounded-down origin, not from the raw one, so
+  // flooring the corner cannot leave the far edge a fraction short.
+  const left = Math.floor(x! - pad);
+  const top = Math.floor(y! - pad);
+  return {
+    x: String(left),
+    y: String(top),
+    width: String(Math.ceil(x! + w! + pad - left)),
+    height: String(Math.ceil(y! + h! + pad - top)),
+  };
+}
+
 function tree(payload: Payload, opts: RenderOptions): { attrs: Record<string, string>; children: El[] } {
   assertPayload(payload);
   const prefix = safeId(opts.idPrefix ?? uid());
+  const region = maskRegion(payload);
 
   const masks: El[] = [];
   const ink: El[] = [];
@@ -83,7 +115,7 @@ function tree(payload: Payload, opts: RenderOptions): { attrs: Record<string, st
     // sideways at tight curves and uncovers a neighbouring stroke early.
     masks.push({
       name: 'mask',
-      attrs: { id, maskUnits: 'userSpaceOnUse' },
+      attrs: { id, maskUnits: 'userSpaceOnUse', ...region },
       children: [{ name: 'path', attrs: maskPath }],
     });
 

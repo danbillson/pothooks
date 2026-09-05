@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@pothooks/core": "workspace:*",
     "@pothooks/react": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

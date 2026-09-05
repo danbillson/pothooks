@@ -1,0 +1,363 @@
+/* The ink system from the Pothooks app, ported to plain CSS. The playground is
+   a dev harness, so it stays dependency-free rather than pulling in Tailwind —
+   but it should look like the thing it is a harness for. */
+
+:root {
+  --paper: #ffffff;
+  --graphite: #111111;
+  --rule: #e2e2e2;
+  --muted: #8c8c8c;
+  --alarm: #c0392b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  overscroll-behavior: none;
+  background: var(--paper);
+  color: var(--graphite);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ shell */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+}
+
+.wordmark {
+  letter-spacing: 0.3em;
+}
+
+.context,
+.header a {
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.header a:hover {
+  color: var(--graphite);
+}
+
+.body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .body {
+    flex-direction: row;
+  }
+}
+
+.main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+
+.aside {
+  width: 100%;
+  flex-shrink: 0;
+  padding: 24px;
+}
+
+@media (min-width: 1024px) {
+  .aside {
+    width: 380px;
+    border-left: 1px solid var(--rule);
+    overflow-y: auto;
+  }
+}
+
+/* ----------------------------------------------------------------- pieces */
+
+.eyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.panel {
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.panel:first-child {
+  border-top: 0;
+  margin-top: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 4px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+}
+
+.panel-status {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.row-label {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.row-value {
+  min-width: 0;
+  text-align: right;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: 0;
+  padding-top: 8px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.note.alarm {
+  color: var(--alarm);
+}
+
+/* ------------------------------------------------------------------ stage */
+
+/* Fixed height on purpose, exactly as in the app: sized to the ink, a wide
+   signature makes this box as tall as the page. */
+.stage {
+  display: flex;
+  height: 260px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  padding: 24px;
+  width: 100%;
+  background: none;
+  color: var(--graphite);
+}
+
+/* An inline <svg> with a viewBox has an aspect ratio but no intrinsic size, so
+   `max-width`/`max-height` alone can leave it at the 300x150 replaced-element
+   default. Give it the box and let preserveAspectRatio letterbox the content. */
+.stage svg {
+  width: 100%;
+  height: 100%;
+}
+
+.stage:disabled {
+  cursor: default;
+}
+
+.empty {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------- controls */
+
+.slider {
+  display: block;
+  user-select: none;
+  padding-top: 12px;
+}
+
+.slider.disabled {
+  opacity: 0.3;
+}
+
+.slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.slider-head span:first-child {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.slider-head span:last-child {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 18px;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--rule);
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--graphite);
+}
+
+input[type='range']:hover::-webkit-slider-thumb {
+  background: var(--graphite);
+}
+
+input[type='range']::-moz-range-track {
+  height: 1px;
+  background: var(--rule);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--graphite);
+}
+
+.segmented {
+  display: flex;
+  padding-top: 12px;
+}
+
+.segmented button {
+  flex: 1;
+  border: 1px solid var(--rule);
+  background: none;
+  padding: 6px 0;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.segmented button:hover {
+  color: var(--graphite);
+}
+
+.segmented button[aria-pressed='true'] {
+  border-color: var(--graphite);
+  color: var(--graphite);
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  background: none;
+  padding: 6px 12px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--graphite);
+}
+
+.button:hover:enabled {
+  border-color: var(--graphite);
+}
+
+.button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------- payload */
+
+.paste {
+  width: 100%;
+  height: 150px;
+  resize: vertical;
+  margin-top: 12px;
+  border: 1px solid var(--rule);
+  background: #fafafa;
+  padding: 12px;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--graphite);
+}
+
+.paste:focus {
+  outline: none;
+  border-color: var(--graphite);
+}
+
+.paste.invalid {
+  border-color: var(--alarm);
+}

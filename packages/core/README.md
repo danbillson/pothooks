@@ -70,6 +70,9 @@ interface Playback {
   `IntersectionObserver` into the same gate with `setInView()`.
 - **Mask ids are unique per instance.** Two pieces on one page with colliding
   ids would be the first bug this library shipped.
+- **Every mask states an explicit region** sized to the viewBox plus a stroke
+  of margin. The default (`-10% -10% 120% 120%`) resolves against the viewport
+  under `maskUnits="userSpaceOnUse"` and clips all the ink above the origin.
 - **No global CSS.** Everything is inline on the SVG.
 
 Using React? Reach for

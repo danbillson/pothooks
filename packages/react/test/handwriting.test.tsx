@@ -8,6 +8,7 @@ import { Handwriting } from '../src/index.js';
 
 const payload = fixture as unknown as Payload;
 const total = payload.strokes.reduce((sum, s) => sum + s.delay + s.dur, 0);
+const text = payload.meta!.text!;
 
 /** happy-dom has no IntersectionObserver; drive one by hand. */
 const observers: { el: Element; fire: (visible: boolean) => void }[] = [];
@@ -58,7 +59,7 @@ describe('<Handwriting> on the server', () => {
   it('renders the piece fully drawn, so there is never a blank first paint', () => {
     const html = renderToStaticMarkup(<Handwriting payload={payload} />);
 
-    expect(html).toContain('aria-label="hi"');
+    expect(html).toContain(`aria-label="${text}"`);
     expect(html).toContain(`viewBox="${payload.viewBox}"`);
     expect(html.match(/<mask /g)).toHaveLength(payload.strokes.length);
     expect(html).not.toContain('stroke-dashoffset="1"');

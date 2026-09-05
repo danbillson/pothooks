@@ -3,6 +3,7 @@ import fixture from '../../../fixtures/signature.json';
 import { ATTR, render, renderMarkup, renderToString, type Payload } from '../src/index.js';
 
 const payload = fixture as unknown as Payload;
+const text = payload.meta!.text!;
 
 describe('render', () => {
   it('renders the shared fixture fully drawn', () => {
@@ -10,7 +11,7 @@ describe('render', () => {
 
     expect(svg.getAttribute('viewBox')).toBe(payload.viewBox);
     expect(svg.getAttribute('role')).toBe('img');
-    expect(svg.getAttribute('aria-label')).toBe('hi');
+    expect(svg.getAttribute('aria-label')).toBe(text);
 
     const masks = svg.querySelectorAll('mask');
     expect(masks).toHaveLength(payload.strokes.length);
@@ -49,6 +50,37 @@ describe('render', () => {
       expect(Number(path.getAttribute(ATTR.dur))).toBe(stroke.dur);
       expect(path.getAttribute(ATTR.keyTimes)).toBe(stroke.k ? stroke.k.join(' ') : null);
     });
+  });
+
+  it('states a mask region covering the whole viewBox, so ink above the origin survives', () => {
+    // The default region is -10%/-10%/120%/120% resolved against the viewport,
+    // which clips everything above the origin — and ink sits at negative y.
+    // Structural assertions alone will not catch that, so pin the geometry.
+    const svg = render(payload, { idPrefix: 'fx' });
+    const [vx, vy, vw, vh] = payload.viewBox.trim().split(/[\s,]+/).map(Number) as number[];
+    const widest = Math.max(...payload.strokes.map((s) => s.w));
+
+    const masks = svg.querySelectorAll('mask');
+    expect(masks.length).toBeGreaterThan(0);
+
+    for (const mask of masks) {
+      const x = Number(mask.getAttribute('x'));
+      const y = Number(mask.getAttribute('y'));
+      const w = Number(mask.getAttribute('width'));
+      const h = Number(mask.getAttribute('height'));
+
+      expect(x).toBeLessThanOrEqual(vx! - widest);
+      expect(y).toBeLessThanOrEqual(vy! - widest);
+      expect(x + w).toBeGreaterThanOrEqual(vx! + vw! + widest);
+      expect(y + h).toBeGreaterThanOrEqual(vy! + vh! + widest);
+    }
+  });
+
+  it('omits the mask region rather than emitting NaN for an unparseable viewBox', () => {
+    const svg = render({ ...payload, viewBox: 'not a viewBox' }, { idPrefix: 'fx' });
+    const mask = svg.querySelector('mask')!;
+    expect(mask.getAttribute('x')).toBeNull();
+    expect(mask.getAttribute('width')).toBeNull();
   });
 
   it('gives every instance its own mask ids', () => {

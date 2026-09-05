@@ -41,13 +41,19 @@ outline, with `pathLength="1"` and `stroke-dasharray="1 1"`. Animating
 real outline, with its real pressure taper, is uncovered in the order it was
 written.
 
-Two rules follow from that, and both are load-bearing:
+Three rules follow from that, and all of them are load-bearing:
 
 - **One mask per stroke.** A single wide mask leaks sideways at tight curves
   and uncovers a neighbouring stroke early.
 - **The served state is the drawn state.** Markup ships fully inked; animation
   *removes* the ink and then restores it. Backwards, and every no-JS,
   reduced-motion or unsupported context shows a blank box.
+- **Every mask states its region.** A `<mask>` with no `x`/`y`/`width`/`height`
+  defaults to `-10% -10% 120% 120%`, and under `maskUnits="userSpaceOnUse"`
+  those resolve against the *viewport*, not the masked shape. Ink sits at
+  negative y, so the default region clips everything above the origin and
+  leaves only the strokes nearest the baseline — which looks like a mask that
+  is too narrow and is nothing of the sort.
 
 Known limitation: a stroke that loops tightly back over itself (a cursive `l`)
 can uncover a few pixels of its own far side early, because the mask is as wide

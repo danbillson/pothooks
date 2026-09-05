@@ -26,6 +26,9 @@ importers:
 
   examples/playground:
     dependencies:
+      '@pothooks/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@pothooks/react':
         specifier: workspace:*
         version: link:../../packages/react
