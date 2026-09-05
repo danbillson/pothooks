@@ -1,0 +1,79 @@
+# pothooks-animate
+
+Replay handwriting on the web. Given a payload exported by
+[Pothooks](https://pothooks.com), draw the text as if a hand were writing it —
+in the real stroke order, at the real recorded cadence.
+
+Pothooks records handwriting as **centrelines**: the actual path of the pen,
+with per-sample pressure and inter-sample milliseconds. This is not "animate a
+font" — a font binary cannot carry that data. It is "replay a recording".
+
+**Nothing in these packages computes geometry.** Pothooks precomputes every
+path and every timing; the runtime interpolates numbers and sets attributes.
+No curve fitting, no `getTotalLength()`, no measurement — which is what keeps
+the bundle tiny and the render identical on a server and in a browser.
+
+## Packages
+
+| Package | What it is |
+| --- | --- |
+| [`@pothooks/core`](packages/core) | Framework-agnostic renderer and playback. No dependencies. |
+| [`@pothooks/react`](packages/react) | `<Handwriting>`, SSR-correct. |
+
+`@pothooks/vue` and a `<script>`-tag build come next.
+
+## Quick look
+
+```bash
+pnpm install
+pnpm run build
+pnpm --filter @pothooks/playground dev
+```
+
+## How the reveal works
+
+Each stroke ships as a filled outline (`o`) plus the pen's centreline (`c`).
+The centreline is never drawn — it strokes a mask, wide enough to cover the
+outline, with `pathLength="1"` and `stroke-dasharray="1 1"`. Animating
+`stroke-dashoffset` from `1` to `0` wipes that mask along the pen path, so the
+real outline, with its real pressure taper, is uncovered in the order it was
+written.
+
+Two rules follow from that, and both are load-bearing:
+
+- **One mask per stroke.** A single wide mask leaks sideways at tight curves
+  and uncovers a neighbouring stroke early.
+- **The served state is the drawn state.** Markup ships fully inked; animation
+  *removes* the ink and then restores it. Backwards, and every no-JS,
+  reduced-motion or unsupported context shows a blank box.
+
+Known limitation: a stroke that loops tightly back over itself (a cursive `l`)
+can uncover a few pixels of its own far side early, because the mask is as wide
+as the brush. Acceptable at speed.
+
+## The payload
+
+`Payload` is the contract between the Pothooks app and this runtime, and is
+[defined independently in both repos](packages/core/src/types.ts) on purpose —
+a shared schema package would put a release cycle in front of every field.
+
+`fixtures/signature.json` is what keeps them honest: a real exported payload,
+byte-identical in both repos. This repo renders it and asserts the SVG
+structure; Pothooks asserts its exporter reproduces the file. Drift shows up as
+a failing test rather than a support thread.
+
+## Repo
+
+```
+packages/core        the runtime
+packages/react       the React wrapper
+examples/playground  vite, not published
+fixtures             the shared payload fixture
+```
+
+pnpm workspaces, Turborepo, Changesets, Vitest + happy-dom. Published from CI
+with npm trusted publishing (OIDC).
+
+## Licence
+
+MIT
