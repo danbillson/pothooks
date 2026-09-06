@@ -1,4 +1,4 @@
-import { ATTR } from './render.js';
+import { ATTR, DASH } from './render.js';
 
 export interface PlayOptions {
   /** 1 = the recorded cadence. */
@@ -114,11 +114,22 @@ export function play(svg: SVGSVGElement, opts: PlayOptions = {}): Playback {
   let announced = false;
   let destroyed = false;
 
+  /**
+   * Where the dash's end sits, as an offset. It runs from `DASH.start` (on the
+   * path's first point) to `DASH.drawn` (on its last), and parks at
+   * `DASH.hidden` before the stroke begins — see `DASH` for why a stroke that
+   * has not started cannot simply sit at the start of its own reveal.
+   */
   function offsetFor(track: Track, at: number): number {
-    if (at >= track.end) return 0;
-    if (at <= track.start) return 1;
+    if (at >= track.end) return DASH.drawn;
+    if (at <= track.start) return DASH.hidden;
     const u = track.dur > 0 ? (at - track.start) / track.dur : 1;
-    return 1 - (track.k && track.p ? cadence(track.k, track.p, u) : u);
+    const revealed = track.k && track.p ? cadence(track.k, track.p, u) : u;
+    // Nothing revealed is the hidden offset, not the near end of the reveal.
+    // A recorded cadence can sit at zero for its first few keytimes, and
+    // `DASH.start` puts the dash's end exactly on the path's first point —
+    // where a round cap paints the very disc this pattern exists to avoid.
+    return revealed <= 0 ? DASH.hidden : DASH.start - revealed;
   }
 
   function apply(at: number): void {
@@ -127,7 +138,12 @@ export function play(svg: SVGSVGElement, opts: PlayOptions = {}): Playback {
       // NaN on the first pass, so this always writes once.
       if (Math.abs(next - track.last) < 1e-4) continue;
       track.last = next;
-      track.el.setAttribute('stroke-dashoffset', next === 0 ? '0' : next.toFixed(4));
+      // Whole numbers written as themselves, so the drawn state is the same
+      // string the renderer served and a settled piece matches its own markup.
+      track.el.setAttribute(
+        'stroke-dashoffset',
+        Number.isInteger(next) ? String(next) : next.toFixed(4),
+      );
     }
   }
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fixture from '../../../fixtures/signature.json';
-import { ATTR, play, render, type Payload } from '../src/index.js';
+import { ATTR, DASH, play, render, type Payload } from '../src/index.js';
 
 const payload = fixture as unknown as Payload;
 const total = payload.strokes.reduce((sum, s) => sum + s.delay + s.dur, 0);
@@ -40,10 +40,10 @@ describe('play', () => {
     const playback = play(svg, { autoplay: false });
 
     playback.seek(0);
-    expect(offsets(svg)).toEqual(payload.strokes.map(() => 1));
+    expect(offsets(svg)).toEqual(payload.strokes.map(() => DASH.hidden));
 
     playback.seek(1);
-    expect(offsets(svg)).toEqual(payload.strokes.map(() => 0));
+    expect(offsets(svg)).toEqual(payload.strokes.map(() => DASH.drawn));
 
     playback.destroy();
   });
@@ -58,10 +58,10 @@ describe('play', () => {
     playback.seek((first.delay + first.dur + second.delay + second.dur / 2) / total);
 
     const [a, b, c] = offsets(svg);
-    expect(a).toBe(0);
-    expect(b).toBeGreaterThan(0);
-    expect(b).toBeLessThan(1);
-    expect(c).toBe(1);
+    expect(a).toBe(DASH.drawn);
+    expect(b).toBeGreaterThan(DASH.drawn);
+    expect(b).toBeLessThanOrEqual(DASH.start);
+    expect(c).toBe(DASH.hidden);
 
     playback.destroy();
   });
@@ -80,7 +80,9 @@ describe('play', () => {
     // At each recorded keytime the reveal must sit on the recorded fraction.
     stroke.k!.forEach((k, i) => {
       playback.seek((start + k * stroke.dur) / total);
-      expect(offsets(svg)[withCadence]).toBeCloseTo(1 - stroke.p![i]!, 3);
+      const revealed = stroke.p![i]!;
+      const want = revealed <= 0 ? DASH.hidden : DASH.start - revealed;
+      expect(offsets(svg)[withCadence]).toBeCloseTo(want, 3);
     });
 
     playback.destroy();
@@ -92,11 +94,11 @@ describe('play', () => {
     const svg = render(payload);
     const playback = play(svg, { onDone });
 
-    expect(offsets(svg).every((o) => o === 1)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.hidden)).toBe(true);
 
     await vi.advanceTimersByTimeAsync(total + 200);
 
-    expect(offsets(svg)).toEqual(payload.strokes.map(() => 0));
+    expect(offsets(svg)).toEqual(payload.strokes.map(() => DASH.drawn));
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(playback.playing).toBe(false);
 
@@ -137,7 +139,7 @@ describe('play', () => {
     const playback = play(svg, { startDelay: 500 });
 
     await vi.advanceTimersByTimeAsync(400);
-    expect(offsets(svg).every((o) => o === 1)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.hidden)).toBe(true);
 
     playback.destroy();
   });
@@ -150,12 +152,12 @@ describe('play', () => {
     playback.setInView(false);
     expect(playback.playing).toBe(false);
     await vi.advanceTimersByTimeAsync(total + 200);
-    expect(offsets(svg).some((o) => o > 0)).toBe(true);
+    expect(offsets(svg).some((o) => o > DASH.drawn)).toBe(true);
 
     playback.setInView(true);
     expect(playback.playing).toBe(true);
     await vi.advanceTimersByTimeAsync(total + 200);
-    expect(offsets(svg)).toEqual(payload.strokes.map(() => 0));
+    expect(offsets(svg)).toEqual(payload.strokes.map(() => DASH.drawn));
 
     playback.destroy();
   });
@@ -169,7 +171,7 @@ describe('play', () => {
 
     await vi.advanceTimersByTimeAsync(total + 200);
 
-    expect(offsets(svg)).toEqual(payload.strokes.map(() => 0));
+    expect(offsets(svg)).toEqual(payload.strokes.map(() => DASH.drawn));
     expect(playback.playing).toBe(false);
     expect(onDone).toHaveBeenCalledTimes(1);
 
@@ -182,10 +184,10 @@ describe('play', () => {
     const playback = play(svg);
 
     await vi.advanceTimersByTimeAsync(total / 3);
-    expect(offsets(svg).some((o) => o > 0)).toBe(true);
+    expect(offsets(svg).some((o) => o > DASH.drawn)).toBe(true);
 
     playback.destroy();
-    expect(offsets(svg)).toEqual(payload.strokes.map(() => 0));
+    expect(offsets(svg)).toEqual(payload.strokes.map(() => DASH.drawn));
 
     await vi.advanceTimersByTimeAsync(total);
     expect(playback.playing).toBe(false);
