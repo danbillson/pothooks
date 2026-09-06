@@ -34,7 +34,7 @@ what `@pothooks/react` uses.
 | --- | --- |
 | `idPrefix` | Prefix for this instance's mask ids. Defaults to a generated one; pass a stable value when server and client markup must match. |
 | `color` | CSS colour for the ink. The ink is always `currentColor`; this sets `color` on the `<svg>`. |
-| `title` | Accessible name. Defaults to `payload.meta.text`; without either, the SVG is marked decorative. |
+| `title` | Accessible name. Defaults to `payload.meta.text`; without either, the SVG is marked decorative. `meta.text` is optional and not guaranteed to read as a label, so pass `title` when the name matters. |
 
 ### `play(svg, opts?): Playback`
 

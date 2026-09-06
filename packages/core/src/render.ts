@@ -71,7 +71,7 @@ function assertPayload(payload: Payload): void {
   }
   if (payload.v !== 1) {
     throw new TypeError(
-      `@pothooks/core: unsupported payload version ${String((payload as { v: unknown }).v)} (expected 1)`,
+      `@pothooks/core: unsupported payload version ${String(payload.v)} (expected 1)`,
     );
   }
   if (!Array.isArray(payload.strokes)) {

@@ -27,7 +27,7 @@ blank first paint, and never a blank box under `prefers-reduced-motion`.
 | `loop` | `false` | `true`, or ms to pause between loops. |
 | `startDelay` | `0` | Ms before the first stroke. |
 | `color` | inherits | Ink colour. The ink is `currentColor`, so this just sets `color`. |
-| `title` | `payload.meta.text` | Accessible name. Without either, the SVG is decorative. |
+| `title` | `payload.meta.text` | Accessible name. Without either, the SVG is decorative. Pass it explicitly unless you trust the payload's `meta.text` to be the words as written. |
 | `reducedMotion` | `"respect"` | `"ignore"` only if the motion *is* the content. |
 | `onDone` | — | Fires each time the piece finishes, including on every loop. |
 

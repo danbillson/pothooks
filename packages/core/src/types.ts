@@ -7,13 +7,16 @@
  * what actually keeps them honest.
  */
 export interface Payload {
-  /** Format version. Bump on any breaking change. */
-  v: 1;
+  /** Format version. Bump on any breaking change. Only 1 renders; the
+   *  runtime rejects anything else, so this stays wide enough to accept a
+   *  plain `import payload from "./signature.json"`. */
+  v: number;
   /** SVG viewBox for the whole piece of text, e.g. "0 -120 1840 320". */
   viewBox: string;
   /** Strokes in the order the hand drew them. */
   strokes: Stroke[];
-  /** Optional, for grouping effects. Not required to render. */
+  /** Optional. Not required to render. `text` doubles as the default
+   *  accessible name, so write what was actually written, not a label. */
   meta?: { text?: string; family?: string };
 }
 
