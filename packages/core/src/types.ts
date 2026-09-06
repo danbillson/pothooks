@@ -26,7 +26,17 @@ export interface Stroke {
   c: string;
   /** Mask stroke-width, in viewBox units. Wide enough to cover `o` entirely. */
   w: number;
-  /** Milliseconds to wait after the previous stroke finished. */
+  /**
+   * Milliseconds to wait after the previous stroke finished.
+   *
+   * Zero is meaningful and must not be given a floor: it marks the first
+   * stroke of a piece, and a piece that continues the previous one with the
+   * hand never leaving the paper. The exporter cuts a stroke wherever it
+   * crosses or nears its own earlier path — otherwise the reveal of one part
+   * uncovers ink belonging to another — and the parts come across as
+   * consecutive strokes with no pen-up between them. A real pen-up is never
+   * recorded as zero.
+   */
   delay: number;
   /** Milliseconds this stroke takes to draw. */
   dur: number;

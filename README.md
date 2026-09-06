@@ -36,15 +36,26 @@ pnpm --filter @pothooks/playground dev
 
 Each stroke ships as a filled outline (`o`) plus the pen's centreline (`c`).
 The centreline is never drawn — it strokes a mask, wide enough to cover the
-outline, with `pathLength="1"` and `stroke-dasharray="1 1"`. Animating
-`stroke-dashoffset` from `1` to `0` wipes that mask along the pen path, so the
+outline, with `pathLength="1"` and `stroke-dasharray="2 3"`. Animating
+`stroke-dashoffset` from `2` to `1` wipes that mask along the pen path, so the
 real outline, with its real pressure taper, is uncovered in the order it was
-written.
+written; a stroke not yet reached parks at `3`.
 
-Three rules follow from that, and all of them are load-bearing:
+The pattern is deliberately longer than the path. The obvious `1 1` running
+`1` → `0` puts a dash boundary exactly on both ends of the path while a stroke
+is hidden, and the mask has round caps — so a renderer that emits the
+zero-length dash it finds there paints a disc where the pen has not yet
+arrived. `2 3` parks both boundaries a whole path length clear of either end.
+
+Four rules follow from that, and all of them are load-bearing:
 
 - **One mask per stroke.** A single wide mask leaks sideways at tight curves
   and uncovers a neighbouring stroke early.
+- **Each mask is sized to its own stroke.** A `<mask>` is an offscreen surface,
+  and the region is what says how much of one. Sized to the whole viewBox, a
+  200-stroke piece asks the compositor for 200 full-canvas buffers: measured in
+  Chromium, a 240-stroke piece ran at 433ms a frame, and at 16.7ms with each
+  region sized to its own stroke.
 - **The served state is the drawn state.** Markup ships fully inked; animation
   *removes* the ink and then restores it. Backwards, and every no-JS,
   reduced-motion or unsupported context shows a blank box.

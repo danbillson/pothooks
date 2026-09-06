@@ -2,7 +2,7 @@ import { act, cleanup, render as mount, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Payload, Playback } from '@pothooks/core';
+import { DASH, type Payload, type Playback } from '@pothooks/core';
 import fixture from '../../../fixtures/signature.json';
 import { Handwriting } from '../src/index.js';
 
@@ -62,8 +62,10 @@ describe('<Handwriting> on the server', () => {
     expect(html).toContain(`aria-label="${text}"`);
     expect(html).toContain(`viewBox="${payload.viewBox}"`);
     expect(html.match(/<mask /g)).toHaveLength(payload.strokes.length);
-    expect(html).not.toContain('stroke-dashoffset="1"');
-    expect(html.match(/stroke-dashoffset="0"/g)).toHaveLength(payload.strokes.length);
+    expect(html).not.toContain(`stroke-dashoffset="${DASH.hidden}"`);
+    expect(html.match(new RegExp(`stroke-dashoffset="${DASH.drawn}"`, 'g'))).toHaveLength(
+      payload.strokes.length,
+    );
   });
 
   it('gives two pieces on one page different mask ids', () => {
@@ -86,13 +88,13 @@ describe('<Handwriting> in the browser', () => {
     const svg = screen.getByRole('img');
 
     // Not yet in view: still the served, fully-drawn state.
-    expect(offsets(svg).every((o) => o === 0)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.drawn)).toBe(true);
 
     scrollIntoView();
-    expect(offsets(svg).every((o) => o === 1)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.hidden)).toBe(true);
 
     await act(() => vi.advanceTimersByTimeAsync(total + 200));
-    expect(offsets(svg).every((o) => o === 0)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.drawn)).toBe(true);
     expect(onDone).toHaveBeenCalledTimes(1);
   });
 
@@ -114,10 +116,10 @@ describe('<Handwriting> in the browser', () => {
     vi.useFakeTimers();
     mount(<Handwriting payload={payload} trigger="mount" />);
     const svg = screen.getByRole('img');
-    expect(offsets(svg).every((o) => o === 1)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.hidden)).toBe(true);
 
     await act(() => vi.advanceTimersByTimeAsync(total + 200));
-    expect(offsets(svg).every((o) => o === 0)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.drawn)).toBe(true);
   });
 
   it('waits for the ref when the trigger is manual', async () => {
@@ -128,11 +130,11 @@ describe('<Handwriting> in the browser', () => {
     scrollIntoView();
 
     await act(() => vi.advanceTimersByTimeAsync(total));
-    expect(offsets(svg).every((o) => o === 0)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.drawn)).toBe(true);
     expect(ref.current!.duration).toBe(total);
 
     act(() => ref.current!.play());
-    expect(offsets(svg).every((o) => o === 1)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.hidden)).toBe(true);
   });
 
   it('replays on hover', async () => {
@@ -142,10 +144,10 @@ describe('<Handwriting> in the browser', () => {
     scrollIntoView();
 
     await act(() => vi.advanceTimersByTimeAsync(total));
-    expect(offsets(svg).every((o) => o === 0)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.drawn)).toBe(true);
 
     act(() => svg.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })));
-    expect(offsets(svg).every((o) => o === 1)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.hidden)).toBe(true);
   });
 
   it('passes className, style and colour through to the svg', () => {
@@ -169,6 +171,6 @@ describe('<Handwriting> in the browser', () => {
     expect(offsets(svg).some((o) => o > 0)).toBe(true);
 
     unmount();
-    expect(offsets(svg).every((o) => o === 0)).toBe(true);
+    expect(offsets(svg).every((o) => o === DASH.drawn)).toBe(true);
   });
 });
